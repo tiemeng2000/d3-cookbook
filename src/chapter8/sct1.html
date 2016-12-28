@@ -119,16 +119,31 @@ function scatterPlotChart() {
     }
 
     function renderSymbols() { // <-B
-        _data.forEach(function (list, i) {
-            _bodyG.selectAll("path._" + i)
-                        .data(list)
-                    .enter()
-                    .append("path")
-                    .attr("class", "symbol _" + i);
+        //_data.forEach(function (list, i) {
+        //_data.forEach(function (list,i) {
 
-            _bodyG.selectAll("path._" + i)
-                    .data(list)
-                        .classed(_symbolTypes(i), true)
+            // _bodyG.selectAll("path._0")
+            //             .data(_data)
+            //         .enter()
+            //         .append("path")
+            //         .attr("class", "symbol _0");
+
+          // _bodyG.selectAll("path._0")
+          //     .data(_data)
+          //     .enter()
+          //     .append("path")
+          //     .attr("class", "symbol _0")
+          //     .attr("id", function(d,i){
+          //       return d.playerID;
+          //     })
+          //     .attr("r", 3.5)
+          //     .attr("cx", function(d) { return x(d.A); })
+          //     .attr("cy", function(d) { return y(d.PO); })
+          //     .style("fill", function(d) { return "steelblue"; });
+
+            _bodyG.selectAll("path._0")
+                    .data(_data)
+                        .classed(_symbolTypes(0), true)
                     .transition() // <-C
                         .attr("transform", function(d){
                             return "translate(" // <-D
@@ -139,9 +154,10 @@ function scatterPlotChart() {
                         })
                         .attr("d", 
                             d3.svg.symbol() // <-E
-                                .type(_symbolTypes(i))
+                                .type(_symbolTypes(0))
                         ); 
-        });
+
+        
     }
 
     function xStart() {
@@ -204,8 +220,13 @@ function scatterPlotChart() {
         return _chart;
     };
 
-    _chart.addSeries = function (series) {
-        _data.push(series);
+    _chart.data = function (dt) {
+        if (!arguments.length) return _data;
+    };
+    _chart.addData = function (d) {
+        _data.push(d);
+        _x = d3.scale.linear().range([0,_width]);
+        _y = d3.scale.linear().range([_height,0]);
         return _chart;
     };
 
@@ -217,7 +238,7 @@ function randomData() {
     return Math.random() * 9;
 }
 
-// //更新
+//更新
 // function update() {
 //     for (var i = 0; i < data.length; ++i) {
 //         var series = data[i];
@@ -230,9 +251,7 @@ function randomData() {
 // }
 
 //生成系列
-var numberOfSeries = 5,
-    numberOfDataPoint = 11,
-    data = [];
+var data = [];
 
 // for (var i = 0; i < numberOfSeries; ++i){
 //     data.push(d3.range(numberOfDataPoint).map(function (i) {
@@ -244,7 +263,8 @@ var chart = scatterPlotChart()
         .x(d3.scale.linear().domain([0, 100]))
         .y(d3.scale.linear().domain([0, 100]));
 
-//var chart = scatterPlotChart();
+
+// var chart = scatterPlotChart();
 
 d3.csv("../../data/2015.csv", function(error, datum) {
   if (error) throw error;
@@ -253,25 +273,26 @@ d3.csv("../../data/2015.csv", function(error, datum) {
     d.A = +d.A;
 
     data.push({x: d.PO, y: d.A});
+    chart.addData({x: d.PO, y: d.A});
+
+    //chart.addSeries(series);
   });
   //chart.x(d3.scale.linear().domain(d3.extent(data, function(d) { return d.A; })).nice());
   //chart.y(d3.scale.linear().domain(d3.extent(data, function(d) { return d.PO; })).nice());
+
 });
-//var chart = scatterPlotChart();
 
 
-
-
-// data.forEach(function (series) {
-//     chart.addSeries(series);
+// data.forEach(function (d) {
+//     chart.addData(d);
 // });
 
 chart.render();
 </script>
 
-<div class="control-group">
+<!-- <div class="control-group">
     <button onclick="update()">Update</button>
-</div>
+</div> -->
 
 </body>
 
