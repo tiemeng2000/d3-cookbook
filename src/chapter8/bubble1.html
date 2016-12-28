@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Scatter Plot Chart</title>
+    <title>Bubble Chart</title>
     <link rel="stylesheet" type="text/css" href="../../css/styles.css"/>
     <script type="text/javascript" src="../../lib/d3.js"></script>
 </head>
@@ -10,23 +10,16 @@
 <body>
 
 <script type="text/javascript">
-function scatterPlotChart() {
+function bubbleChart() {
     var _chart = {};
 
-    var _width = 500, _height = 500,
+    var _width = 600, _height = 300,
             _margins = {top: 30, left: 30, right: 30, bottom: 30},
-            _x, _y,
+            _x, _y, _r, // <-A
             _data = [],
             _colors = d3.scale.category10(),
             _svg,
-            _bodyG,
-            _symbolTypes = d3.scale.ordinal() // <-A
-                    .range(["circle",
-                        "cross",
-                        "diamond",
-                        "square",
-                        "triangle-down",
-                        "triangle-up"]);
+            _bodyG;
 
     _chart.render = function () {
         if (!_svg) {
@@ -46,61 +39,37 @@ function scatterPlotChart() {
         var axesG = svg.append("g")
                 .attr("class", "axes");
 
-        renderXAxis(axesG);
-
-        renderYAxis(axesG);
-    }
-    
-    function renderXAxis(axesG){
         var xAxis = d3.svg.axis()
                 .scale(_x.range([0, quadrantWidth()]))
-                .orient("bottom");        
+                .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+                .scale(_y.range([quadrantHeight(), 0]))
+                .orient("left");
 
         axesG.append("g")
-                .attr("class", "x axis")
+                .attr("class", "axis")
                 .attr("transform", function () {
                     return "translate(" + xStart() + "," + yStart() + ")";
                 })
                 .call(xAxis);
-                
-        d3.selectAll("g.x g.tick")
-            .append("line")
-                .classed("grid-line", true)
-                .attr("x1", 0)
-                .attr("y1", 0)
-                .attr("x2", 0)
-                .attr("y2", - quadrantHeight());
-    }
-    
-    function renderYAxis(axesG){
-        var yAxis = d3.svg.axis()
-                .scale(_y.range([quadrantHeight(), 0]))
-                .orient("left");
-                
+
         axesG.append("g")
-                .attr("class", "y axis")
+                .attr("class", "axis")
                 .attr("transform", function () {
                     return "translate(" + xStart() + "," + yEnd() + ")";
                 })
                 .call(yAxis);
-                
-         d3.selectAll("g.y g.tick")
-            .append("line")
-                .classed("grid-line", true)
-                .attr("x1", 0)
-                .attr("y1", 0)
-                .attr("x2", quadrantWidth())
-                .attr("y2", 0);
     }
 
     function defineBodyClip(svg) {
-        var padding = 5;
+        var padding = 0;
 
         svg.append("defs")
                 .append("clipPath")
                 .attr("id", "body-clip")
                 .append("rect")
-                .attr("x", 0 - padding)
+                .attr("x", 0)
                 .attr("y", 0)
                 .attr("width", quadrantWidth() + 2 * padding)
                 .attr("height", quadrantHeight());
@@ -109,38 +78,44 @@ function scatterPlotChart() {
     function renderBody(svg) {
         if (!_bodyG)
             _bodyG = svg.append("g")
-                    .attr("class", "body")                    
+                    .attr("class", "body")
                     .attr("transform", "translate(" 
-                        + xStart() + "," 
-                        + yEnd() + ")") 
+                            + xStart() 
+                            + "," 
+                            + yEnd() + ")")
                     .attr("clip-path", "url(#body-clip)");
 
-        renderSymbols();
+        renderBubbles();
     }
 
-    function renderSymbols() { // <-B
+    function renderBubbles() {
+        _r.range([0, 50]); // <-B
+    
         _data.forEach(function (list, i) {
-            _bodyG.selectAll("path._" + i)
+            _bodyG.selectAll("circle._" + i)
                         .data(list)
                     .enter()
-                    .append("path")
-                    .attr("class", "symbol _" + i);
+                    .append("circle") // <-C
+                    .attr("class", "bubble _" + i);
 
-            _bodyG.selectAll("path._" + i)
-                    .data(list)
-                        .classed(_symbolTypes(i), true)
-                    .transition() // <-C
-                        .attr("transform", function(d){
-                            return "translate(" // <-D
-                                    + _x(d.x) 
-                                    + "," 
-                                    + _y(d.y) 
-                                    + ")";
-                        })
-                        .attr("d", 
-                            d3.svg.symbol() // <-E
-                                .type(_symbolTypes(i))
-                        ); 
+            _bodyG.selectAll("circle._" + i)
+                        .data(list)
+                    .style("stroke", function (d, j) { 
+                        return _colors(j); 
+                    })
+                    .style("fill", function (d, j) { 
+                        return _colors(j); 
+                    })
+                    .transition()
+                    .attr("cx", function (d) { 
+                        return _x(d.x); // <-D
+                    })
+                    .attr("cy", function (d) { 
+                        return _y(d.y); // <-E
+                    })
+                    .attr("r", function (d) { 
+                        return _r(d.r); // <-F
+                    });
         });
     }
 
@@ -203,6 +178,12 @@ function scatterPlotChart() {
         _y = y;
         return _chart;
     };
+    
+    _chart.r = function (r) {
+        if (!arguments.length) return _r;
+        _r = r;
+        return _chart;
+    };
 
     _chart.addSeries = function (series) {
         _data.push(series);
@@ -212,36 +193,34 @@ function scatterPlotChart() {
     return _chart;
 }
 
-//随机数
 function randomData() {
     return Math.random() * 9;
 }
 
-//更新
 function update() {
     for (var i = 0; i < data.length; ++i) {
         var series = data[i];
         series.length = 0;
         for (var j = 0; j < numberOfDataPoint; ++j)
-            series.push({x: randomData(), y: randomData()});
+            series.push({x: randomData(), y: randomData(), r: randomData()});
     }
 
     chart.render();
 }
 
-//生成系列
-var numberOfSeries = 5,
+var numberOfSeries = 1,
     numberOfDataPoint = 11,
     data = [];
 
 for (var i = 0; i < numberOfSeries; ++i)
     data.push(d3.range(numberOfDataPoint).map(function (i) {
-        return {x: randomData(), y: randomData()};
+        return {x: randomData(), y: randomData(), r: randomData()};
     }));
 
-var chart = scatterPlotChart()
+var chart = bubbleChart()
         .x(d3.scale.linear().domain([0, 10]))
-        .y(d3.scale.linear().domain([0, 10]));
+        .y(d3.scale.linear().domain([0, 10]))
+        .r(d3.scale.pow().exponent(2).domain([0, 10]));
 
 data.forEach(function (series) {
     chart.addSeries(series);

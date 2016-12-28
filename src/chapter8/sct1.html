@@ -217,35 +217,54 @@ function randomData() {
     return Math.random() * 9;
 }
 
-//更新
-function update() {
-    for (var i = 0; i < data.length; ++i) {
-        var series = data[i];
-        series.length = 0;
-        for (var j = 0; j < numberOfDataPoint; ++j)
-            series.push({x: randomData(), y: randomData()});
-    }
+// //更新
+// function update() {
+//     for (var i = 0; i < data.length; ++i) {
+//         var series = data[i];
+//         series.length = 0;
+//         for (var j = 0; j < numberOfDataPoint; ++j)
+//             series.push({x: randomData(), y: randomData()});
+//     }
 
-    chart.render();
-}
+//     chart.render();
+// }
 
 //生成系列
 var numberOfSeries = 5,
     numberOfDataPoint = 11,
     data = [];
 
-for (var i = 0; i < numberOfSeries; ++i)
-    data.push(d3.range(numberOfDataPoint).map(function (i) {
-        return {x: randomData(), y: randomData()};
-    }));
+// for (var i = 0; i < numberOfSeries; ++i){
+//     data.push(d3.range(numberOfDataPoint).map(function (i) {
+//         return {x: randomData(), y: randomData()};
+//     }));
+// }
 
 var chart = scatterPlotChart()
-        .x(d3.scale.linear().domain([0, 10]))
-        .y(d3.scale.linear().domain([0, 10]));
+        .x(d3.scale.linear().domain([0, 100]))
+        .y(d3.scale.linear().domain([0, 100]));
 
-data.forEach(function (series) {
-    chart.addSeries(series);
+//var chart = scatterPlotChart();
+
+d3.csv("../../data/2015.csv", function(error, datum) {
+  if (error) throw error;
+  datum.forEach(function(d) {
+    d.PO = +d.PO;
+    d.A = +d.A;
+
+    data.push({x: d.PO, y: d.A});
+  });
+  //chart.x(d3.scale.linear().domain(d3.extent(data, function(d) { return d.A; })).nice());
+  //chart.y(d3.scale.linear().domain(d3.extent(data, function(d) { return d.PO; })).nice());
 });
+//var chart = scatterPlotChart();
+
+
+
+
+// data.forEach(function (series) {
+//     chart.addSeries(series);
+// });
 
 chart.render();
 </script>
