@@ -13,8 +13,8 @@
 function scatterPlotChart() {
     var _chart = {};
 
-    var _width = 500, _height = 500,
-            _margins = {top: 30, left: 30, right: 30, bottom: 30},
+    var _width = 600, _height = 600,
+            _margins = {top: 40, left: 40, right: 40, bottom: 40},
             _x, _y,
             _data = [],
             _colors = d3.scale.category10(),
@@ -80,6 +80,7 @@ function scatterPlotChart() {
         axesG.append("g")
                 .attr("class", "y axis")
                 .attr("transform", function () {
+
                     return "translate(" + xStart() + "," + yEnd() + ")";
                 })
                 .call(yAxis);
@@ -94,14 +95,14 @@ function scatterPlotChart() {
     }
 
     function defineBodyClip(svg) {
-        var padding = 5;
+        var padding = 40;
 
         svg.append("defs")
                 .append("clipPath")
                 .attr("id", "body-clip")
                 .append("rect")
                 .attr("x", 0 - padding)
-                .attr("y", 0)
+                .attr("y", 0 - padding)
                 .attr("width", quadrantWidth() + 2 * padding)
                 .attr("height", quadrantHeight());
     }
@@ -118,46 +119,49 @@ function scatterPlotChart() {
         renderSymbols();
     }
 
-    function renderSymbols() { // <-B
-        //_data.forEach(function (list, i) {
-        //_data.forEach(function (list,i) {
+    function renderSymbols() { 
+            
+            //enter
+            _bodyG.selectAll("circle").data(_data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "dot");                 
 
-            // _bodyG.selectAll("path._0")
-            //             .data(_data)
-            //         .enter()
-            //         .append("path")
-            //         .attr("class", "symbol _0");
+            //exit
+            _bodyG.selectAll("circle").data(_data)
+                    .exit().remove();
 
-          // _bodyG.selectAll("path._0")
-          //     .data(_data)
-          //     .enter()
-          //     .append("path")
-          //     .attr("class", "symbol _0")
-          //     .attr("id", function(d,i){
-          //       return d.playerID;
-          //     })
-          //     .attr("r", 3.5)
-          //     .attr("cx", function(d) { return x(d.A); })
-          //     .attr("cy", function(d) { return y(d.PO); })
-          //     .style("fill", function(d) { return "steelblue"; });
+            //update
+            _bodyG.selectAll("circle").data(_data)
+                    .attr("r", 2.5)
+                    .attr("cx", function(d) { return d.A; })
+                    .attr("cy", function(d) { return d.PO; })
+                    .style("fill", function(d) { return "steelblue"; })
+                    .style("stroke", function(d){return "black"});        
 
-            _bodyG.selectAll("path._0")
-                    .data(_data)
-                        .classed(_symbolTypes(0), true)
-                    .transition() // <-C
-                        .attr("transform", function(d){
-                            return "translate(" // <-D
-                                    + _x(d.x) 
-                                    + "," 
-                                    + _y(d.y) 
-                                    + ")";
-                        })
-                        .attr("d", 
-                            d3.svg.symbol() // <-E
-                                .type(_symbolTypes(0))
-                        ); 
+            // _data.forEach(function (list, i) {
+            //     _bodyG.selectAll("path._" + i)
+            //                 .data(list)
+            //             .enter()
+            //             .append("path")
+            //             .attr("class", "symbol _" + i);
 
-        
+            //     _bodyG.selectAll("path._" + i)
+            //             .data(list)
+            //                 .classed(_symbolTypes(i), true)
+            //             .transition() // <-C
+            //                 .attr("transform", function(d){
+            //                     return "translate(" // <-D
+            //                             + _x(d.x) 
+            //                             + "," 
+            //                             + _y(d.y) 
+            //                             + ")";
+            //                 })
+            //                 .attr("d", 
+            //                     d3.svg.symbol() // <-E
+            //                         .type(_symbolTypes(i))
+            //                 ); 
+            // });
     }
 
     function xStart() {
@@ -223,71 +227,35 @@ function scatterPlotChart() {
     _chart.data = function (dt) {
         if (!arguments.length) return _data;
     };
+
     _chart.addData = function (d) {
         _data.push(d);
-        _x = d3.scale.linear().range([0,_width]);
-        _y = d3.scale.linear().range([_height,0]);
+        _x = d3.scale.linear().range([0, _width]);
+        _y = d3.scale.linear().range([_height, 0]);
+        _x.domain(d3.extent(_data, function(d) { return d.A; })).nice();
+        _y.domain(d3.extent(_data, function(d) { return d.PO; })).nice();
+
         return _chart;
     };
 
     return _chart;
 }
 
-//随机数
-function randomData() {
-    return Math.random() * 9;
-}
 
-//更新
-// function update() {
-//     for (var i = 0; i < data.length; ++i) {
-//         var series = data[i];
-//         series.length = 0;
-//         for (var j = 0; j < numberOfDataPoint; ++j)
-//             series.push({x: randomData(), y: randomData()});
-//     }
+var chart = scatterPlotChart();
 
-//     chart.render();
-// }
+d3.csv("../../data/2015.csv", function(error, data) {
+    if (error) throw error;
+    data.forEach(function(d) {
+        d.A = +d.A;
+        d.PO = +d.PO;
+        chart.addData({A: d.A, PO: d.PO});
+    });
 
-//生成系列
-var data = [];
-
-// for (var i = 0; i < numberOfSeries; ++i){
-//     data.push(d3.range(numberOfDataPoint).map(function (i) {
-//         return {x: randomData(), y: randomData()};
-//     }));
-// }
-
-var chart = scatterPlotChart()
-        .x(d3.scale.linear().domain([0, 100]))
-        .y(d3.scale.linear().domain([0, 100]));
-
-
-// var chart = scatterPlotChart();
-
-d3.csv("../../data/2015.csv", function(error, datum) {
-  if (error) throw error;
-  datum.forEach(function(d) {
-    d.PO = +d.PO;
-    d.A = +d.A;
-
-    data.push({x: d.PO, y: d.A});
-    chart.addData({x: d.PO, y: d.A});
-
-    //chart.addSeries(series);
-  });
-  //chart.x(d3.scale.linear().domain(d3.extent(data, function(d) { return d.A; })).nice());
-  //chart.y(d3.scale.linear().domain(d3.extent(data, function(d) { return d.PO; })).nice());
-
+    chart.render();
 });
 
 
-// data.forEach(function (d) {
-//     chart.addData(d);
-// });
-
-chart.render();
 </script>
 
 <!-- <div class="control-group">
