@@ -102,7 +102,7 @@ function scatterPlotChart() {
                 .attr("id", "body-clip")
                 .append("rect")
                 .attr("x", 0 - padding)
-                .attr("y", 0 - padding)
+                .attr("y", 0)
                 .attr("width", quadrantWidth() + 2 * padding)
                 .attr("height", quadrantHeight());
     }
@@ -134,34 +134,32 @@ function scatterPlotChart() {
             //update
             _bodyG.selectAll("circle").data(_data)
                     .attr("r", 2.5)
-                    .attr("cx", function(d) { return d.A; })
-                    .attr("cy", function(d) { return d.PO; })
+                    .attr("cx", function(d) { return _x(d.A); })
+                    .attr("cy", function(d) { return _y(d.PO); })
                     .style("fill", function(d) { return "steelblue"; })
                     .style("stroke", function(d){return "black"});        
 
-            // _data.forEach(function (list, i) {
-            //     _bodyG.selectAll("path._" + i)
-            //                 .data(list)
-            //             .enter()
-            //             .append("path")
-            //             .attr("class", "symbol _" + i);
 
-            //     _bodyG.selectAll("path._" + i)
-            //             .data(list)
-            //                 .classed(_symbolTypes(i), true)
-            //             .transition() // <-C
-            //                 .attr("transform", function(d){
-            //                     return "translate(" // <-D
-            //                             + _x(d.x) 
-            //                             + "," 
-            //                             + _y(d.y) 
-            //                             + ")";
-            //                 })
-            //                 .attr("d", 
-            //                     d3.svg.symbol() // <-E
-            //                         .type(_symbolTypes(i))
-            //                 ); 
-            // });
+            // _bodyG.selectAll("path").data(_data)
+            //         .enter()
+            //         .append("path")
+            //         .attr("class", "dot");
+
+            // _bodyG.selectAll("path").data(_data)
+            //             .classed("dot", true)
+            //         .transition() 
+            //             .attr("transform", function(d){
+            //                 return "translate("
+            //                         + _x(d.A) 
+            //                         + "," 
+            //                         + _y(d.PO) 
+            //                         + ")";
+            //             })
+            //             .attr("d", 
+            //                 d3.svg.symbol() // <-E
+            //                     .type("dot")
+            //             ); 
+
     }
 
     function xStart() {
