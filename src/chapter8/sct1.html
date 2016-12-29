@@ -138,28 +138,6 @@ function scatterPlotChart() {
                     .attr("cy", function(d) { return _y(d.PO); })
                     .style("fill", function(d) { return "steelblue"; })
                     .style("stroke", function(d){return "black"});        
-
-
-            // _bodyG.selectAll("path").data(_data)
-            //         .enter()
-            //         .append("path")
-            //         .attr("class", "dot");
-
-            // _bodyG.selectAll("path").data(_data)
-            //             .classed("dot", true)
-            //         .transition() 
-            //             .attr("transform", function(d){
-            //                 return "translate("
-            //                         + _x(d.A) 
-            //                         + "," 
-            //                         + _y(d.PO) 
-            //                         + ")";
-            //             })
-            //             .attr("d", 
-            //                 d3.svg.symbol() // <-E
-            //                     .type("dot")
-            //             ); 
-
     }
 
     function xStart() {
