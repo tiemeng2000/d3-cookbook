@@ -14,7 +14,7 @@ function scatterPlotChart() {
     var _chart = {};
 
     var _width = 600, _height = 600,
-            _margins = {top: 40, left: 40, right: 40, bottom: 40},
+            _margins = {top: 40, left: 60, right: 40, bottom: 40},
             _x, _y,
             _data = [],
             _colors = d3.scale.category10(),
@@ -56,6 +56,9 @@ function scatterPlotChart() {
                 .scale(_x.range([0, quadrantWidth()]))
                 .orient("bottom");        
 
+        var ticks = _x.domain().filter(function(d,i){ return !(i%10); } );
+        xAxis.tickValues( ticks );
+        
         axesG.append("g")
                 .attr("class", "x axis")
                 .attr("transform", function () {
@@ -95,7 +98,7 @@ function scatterPlotChart() {
     }
 
     function defineBodyClip(svg) {
-        var padding = 40;
+        var padding = 20;
 
         svg.append("defs")
                 .append("clipPath")
@@ -120,22 +123,23 @@ function scatterPlotChart() {
     }
 
     function renderSymbols() { 
-            
+            var padding = 1;
             //enter
-            _bodyG.selectAll("circle").data(_data)
+            _bodyG.selectAll("rect.bar").data(_data)
                     .enter()
-                    .append("circle")
-                    .attr("class", "dot");                 
+                    .append("rect")
+                    .attr("class", "bar");                 
 
             //exit
-            _bodyG.selectAll("circle").data(_data)
+            _bodyG.selectAll("rect.bar").data(_data)
                     .exit().remove();
 
             //update
-            _bodyG.selectAll("circle").data(_data)
-                    .attr("r", 2.5)
-                    .attr("cx", function(d) { return _x(d.A); })
-                    .attr("cy", function(d) { return _y(d.PO); })
+            _bodyG.selectAll("rect.bar").data(_data)                   
+                    .attr("x", function(d) { return _x(d.x); })
+                    .attr("y", function(d) { return _y(+d.y); })
+                    .attr("height", function(d) { return yStart() - _y(+d.y); })
+                    .attr("width", 5)
                     .style("fill", function(d) { return "steelblue"; })
                     .style("stroke", function(d){return "black"});        
     }
@@ -206,11 +210,6 @@ function scatterPlotChart() {
 
     _chart.pushData = function (d) {
         _data.push(d);
-        _x = d3.scale.linear().range([0, _width]);
-        _y = d3.scale.linear().range([_height, 0]);
-        _x.domain(d3.extent(_data, function(d) { return d.A; })).nice();
-        _y.domain(d3.extent(_data, function(d) { return d.PO; })).nice();
-
         return _chart;
     };
 
@@ -225,8 +224,59 @@ d3.csv("../../data/2015.csv", function(error, data) {
     data.forEach(function(d) {
         d.A = +d.A;
         d.PO = +d.PO;
-        chart.pushData({A: d.A, PO: d.PO});
+        d.Salaries = +d.Salaries;
     });
+
+    //Salaries的区间
+    var range = d3.extent(data, function(d){
+        return d.Salaries;
+    });
+    //设置Salaries区间大小
+    var salariesGap = 5000000;
+    //计算区间数
+    var salarySegNum = Math.ceil(range[1]/salariesGap);
+    //创建按区间划分的二维数组
+    var salarySegArray = new Array(salarySegNum);
+    for(var i=0; i<salarySegNum; i++){
+        salarySegArray[i] = new Array();
+    }
+    //按区间填充数组
+    for(var i=0; i<data.length; i++){
+        //区间索引
+        var index = Math.floor(data[i].Salaries / salariesGap);
+        salarySegArray[index].push(data[i].playerID); 
+    }
+
+    //创建salary计数数组
+    var segCountArray = new Array();
+    //填充salary区间计数数组
+    for (var i = 0; i<salarySegNum; i++){
+        segCountArray[i] = new Object();
+        if(salarySegArray[i].length!=0){
+            segCountArray[i].num = salarySegArray[i].length;
+
+        }
+        else{
+            segCountArray[i].num = 0;
+        }
+
+        segCountArray[i].label = i*salariesGap/1000+'k-'+(i+1)*salariesGap/1000+'k';
+    }
+
+    segCountArray.forEach(function(d){
+        d.num = +d.num;
+        chart.pushData({
+            x: d.label,
+            y: d.num
+        });
+    });
+
+    chart.x(d3.scale.ordinal().rangeRoundBands([0, chart.width], .2, 1));
+
+    chart.y(d3.scale.linear().range([chart.height, 0]));
+
+    chart.x(d3.scale.ordinal().domain(segCountArray.map(function(d){return d.label;})));
+    chart.y(d3.scale.linear().domain([0,d3.max(segCountArray, function(d){return +d.num;})]));
 
     chart.render();
 });
